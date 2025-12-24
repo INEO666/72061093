@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>腾韵花园业主资料加水印工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 20px 15px;
+            font-size: 14px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 100%;
+            background: white;
+            padding: 20px 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        /* 简化版操作说明 */
+        .instruction {
+            background: #f0f7ff;
+            border-left: 3px solid #409eff;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+        
+        .instruction-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 15px;
+        }
+        
+        .instruction-list {
+            list-style: none;
+            padding-left: 0;
+            color: #666;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+        
+        .instruction-list li {
+            margin-bottom: 3px;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        .instruction-list li::before {
+            content: "•";
+            color: #409eff;
+            position: absolute;
+            left: 0;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 30px 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #409eff;
+            background-color: #f8f9fa;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .upload-icon {
+            width: 35px;
+            height: 35px;
+            margin: 0 auto 10px;
+        }
+        
+        .upload-text {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .preview-area {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .preview-title {
+            color: #333;
+            text-align: left;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        .image-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .image-box {
+            width: 100%;
+        }
+        
+        img {
+            max-width: 100%;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        #canvas {
+            display: none;
+        }
+        
+        .btn-group {
+            margin-top: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        #downloadBtn {
+            background-color: #409eff;
+            color: white;
+        }
+        
+        #downloadBtn:hover {
+            background-color: #337ecc;
+        }
+        
+        #resetBtn {
+            background-color: #67c23a;
+            color: white;
+        }
+        
+        #resetBtn:hover {
+            background-color: #52af37;
+        }
+        
+        .tip {
+            color: #999;
+            font-size: 12px;
+            margin-top: 15px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        /* 适配手机的交互反馈 */
+        .upload-area:active {
+            background-color: #f0f7ff;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>腾韵花园业主资料加水印工具</h1>
+        
+        <!-- 简化版操作说明 -->
+        <div class="instruction">
+            <div class="instruction-title">操作说明</div>
+            <ul class="instruction-list">
+                <li>点击上传区域选择需要加水印的图片</li>
+                <li>上传后自动生成水印并显示预览效果</li>
+                <li>确认效果后点击下载按钮保存图片</li>
+                <li>如需重新处理可点击重新上传按钮</li>
+            </ul>
+        </div>
+        
+        <!-- 上传区域 -->
+        <div class="upload-area" id="uploadArea">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p class="upload-text">点击此处上传图片</p>
+            <input type="file" id="fileInput" accept="image/*" multiple="false">
+        </div>
+        
+        <!-- 预览区域 -->
+        <div class="preview-area" id="previewArea">
+            <div class="image-container">
+                <div class="image-box">
+                    <p class="preview-title">原图</p>
+                    <img id="originalImage" alt="原图">
+                </div>
+                <div class="image-box">
+                    <p class="preview-title">加水印后</p>
+                    <img id="watermarkImage" alt="加水印后图片">
+                </div>
+            </div>
+            
+            <!-- Canvas用于处理图片（隐藏） -->
+            <canvas id="canvas"></canvas>
+            
+            <!-- 按钮组 -->
+            <div class="btn-group">
+                <button id="downloadBtn">下载水印图片</button>
+                <button id="resetBtn">重新上传</button>
+            </div>
+        </div>
+        
+        <p class="tip">支持JPG、PNG、GIF等图片格式 | 适配手机操作，水印均匀覆盖整张图片，智能避免遮挡内容</p>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewArea = document.getElementById('previewArea');
+        const originalImage = document.getElementById('originalImage');
+        const watermarkImage = document.getElementById('watermarkImage');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // 水印文本
+        const WATERMARK_TEXT = '仅用于腾韵花园业委会成立备案，他用无效';
+
+        // 点击上传区域触发文件选择
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 处理文件选择
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // 拖拽上传（手机端兼容）
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#409eff';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#ddd';
+            uploadArea.style.backgroundColor = 'white';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ddd';
+            uploadArea.style.backgroundColor = 'white';
+            
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect(e);
+            }
+        });
+
+        // 处理文件选择逻辑（单张图片）
+        function handleFileSelect(e) {
+            const file = e.target.files[0] || e.dataTransfer.files[0];
+            if (!file) return;
+
+            // 验证文件类型是否为图片
+            if (!file.type.startsWith('image/')) {
+                alert('请选择有效的图片文件！');
+                return;
+            }
+
+            const reader = new FileReader();
+            
+            // 读取文件完成后处理
+            reader.onload = function(event) {
+                const imgSrc = event.target.result;
+                originalImage.src = imgSrc;
+                
+                // 创建图片对象用于Canvas绘制
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = function() {
+                    // 设置Canvas尺寸与图片一致
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // 绘制原图
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // 智能添加水印（均匀覆盖整张图片）
+                    addFullCoverageWatermark(img.width, img.height);
+                    
+                    // 将Canvas内容转为图片URL
+                    const watermarkSrc = canvas.toDataURL(file.type || 'image/png', 0.95);
+                    watermarkImage.src = watermarkSrc;
+                    
+                    // 显示预览区域
+                    previewArea.style.display = 'block';
+                    
+                    // 滚动到预览区域（手机端友好）
+                    previewArea.scrollIntoView({ behavior: 'smooth' });
+                };
+                img.src = imgSrc;
+            };
+            
+            // 读取文件为DataURL
+            reader.readAsDataURL(file);
+        }
+
+        /**
+         * 全屏覆盖水印生成函数
+         * 确保水印均匀分布在整张图片的所有区域，同时智能控制密度和透明度
+         * @param {number} imgWidth 图片宽度
+         * @param {number} imgHeight 图片高度
+         */
+        function addFullCoverageWatermark(imgWidth, imgHeight) {
+            // 1. 基础参数计算（根据图片尺寸自适应）
+            const imageDiagonal = Math.sqrt(imgWidth * imgWidth + imgHeight * imgHeight); // 图片对角线长度
+            const fontSize = Math.max(24, Math.min(72, imageDiagonal * 0.015)); // 字体大小基于对角线，限制24-72号
+            const rotateAngle = -30; // 旋转角度
+            const rotateRadian = rotateAngle * Math.PI / 180; // 旋转弧度
+            
+            // 2. 计算文字实际宽度和高度
+            ctx.font = `bold ${fontSize}px Microsoft Yahei, sans-serif`;
+            const textWidth = ctx.measureText(WATERMARK_TEXT).width;
+            const textHeight = fontSize;
+            
+            // 3. 计算水印间距（确保均匀覆盖且不密集）
+            // 水平间距 = 文字宽度 * 1.2（保证足够覆盖）
+            // 垂直间距 = 文字高度 * 2.5（避免垂直方向遮挡）
+            const spacingX = textWidth * 1.2;
+            const spacingY = textHeight * 2.5;
+            
+            // 4. 计算旋转后的水印覆盖范围（解决旋转导致的覆盖不全问题）
+            // 旋转后的矩形宽度和高度
+            const rotatedWidth = Math.abs(textWidth * Math.cos(rotateRadian)) + Math.abs(textHeight * Math.sin(rotateRadian));
+            const rotatedHeight = Math.abs(textHeight * Math.cos(rotateRadian)) + Math.abs(textWidth * Math.sin(rotateRadian));
+            
+            // 5. 计算需要的偏移量（确保边缘也能完全覆盖）
+            const offsetX = rotatedWidth * 1.5;
+            const offsetY = rotatedHeight * 1.5;
+            
+            // 6. 计算网格数量（确保覆盖整张图片+偏移区域）
+            const totalWidth = imgWidth + offsetX * 2;
+            const totalHeight = imgHeight + offsetY * 2;
+            
+            const cols = Math.ceil(totalWidth / spacingX);
+            const rows = Math.ceil(totalHeight / spacingY);
+            
+            // 7. 智能透明度（根据图片尺寸和字体大小）
+            let opacity = 0.35;
+            if (fontSize <= 36) opacity = 0.3;    // 小字体降低透明度
+            if (fontSize >= 60) opacity = 0.4;    // 大字体适当提高透明度
+            if (imgWidth < 600 || imgHeight < 600) opacity = 0.25; // 小图进一步降低
+            
+            // 8. 描边设置（细描边增强辨识度但不遮挡）
+            const strokeWidth = fontSize <= 36 ? 1 : 1.5;
+            const strokeOpacity = Math.min(opacity + 0.1, 0.5);
+            
+            // 保存Canvas状态
+            ctx.save();
+            
+            // 设置水印样式
+            ctx.font = `bold ${fontSize}px Microsoft Yahei, sans-serif`;
+            ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`; // 红色水印，低透明度
+            ctx.strokeStyle = `rgba(255, 255, 255, ${strokeOpacity})`; // 白色细描边
+            ctx.lineWidth = strokeWidth;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // 9. 绘制全屏水印网格（核心优化）
+            // 遍历所有网格点，确保均匀覆盖整张图片
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    // 计算当前水印位置（从负偏移开始，到图片尺寸+正偏移结束）
+                    const x = (i * spacingX) - offsetX;
+                    const y = (j * spacingY) - offsetY;
+                    
+                    // 保存当前状态
+                    ctx.save();
+                    
+                    // 平移到目标位置
+                    ctx.translate(x, y);
+                    
+                    // 旋转文字（统一角度）
+                    ctx.rotate(rotateRadian);
+                    
+                    // 绘制文字（先描边后填充，增强辨识度）
+                    ctx.strokeText(WATERMARK_TEXT, 0, 0);
+                    ctx.fillText(WATERMARK_TEXT, 0, 0);
+                    
+                    // 恢复状态
+                    ctx.restore();
+                }
+            }
+
+            // 恢复Canvas初始状态
+            ctx.restore();
+            
+            // 调试信息（可选）
+            console.log(`水印配置：字体大小=${fontSize}，间距X=${spacingX.toFixed(1)}，间距Y=${spacingY.toFixed(1)}`);
+            console.log(`网格数量：${cols}列 × ${rows}行，覆盖范围：${totalWidth.toFixed(1)} × ${totalHeight.toFixed(1)}`);
+        }
+
+        // 下载水印图片
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            // 获取图片格式
+            const format = watermarkImage.src.split(';')[0].split('/')[1] || 'png';
+            // 生成文件名
+            const fileName = `腾韵花园水印图片_${new Date().getTime()}.${format}`;
+            
+            link.download = fileName;
+            link.href = watermarkImage.src;
+            
+            // 模拟点击下载（手机端兼容）
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // 提示下载成功（手机端友好）
+            setTimeout(() => {
+                alert('水印图片已开始下载！');
+            }, 300);
+            
+            // 清理URL
+            URL.revokeObjectURL(link.href);
+        });
+
+        // 重置上传
+        resetBtn.addEventListener('click', () => {
+            if (confirm('确定要重新上传吗？')) {
+                fileInput.value = '';
+                previewArea.style.display = 'none';
+                originalImage.src = '';
+                watermarkImage.src = '';
+                canvas.width = 0;
+                canvas.height = 0;
+                
+                // 滚动回上传区域（手机端友好）
+                uploadArea.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        // 手机端触摸优化
+        document.addEventListener('touchstart', () => {}, { passive: true });
+    </script>
+</body>
+</html>
